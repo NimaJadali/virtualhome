@@ -13,8 +13,8 @@ setuptools.setup(
     long_description_content_type="text/markdown",
     url="https://github.com/xavierpuigf/virtualhome",
     project_urls={
-        "Documentation": "https://virtualcity.readthedocs.io/en/latest/",
-        "Bug Tracker": "https://github.com/ShuangLI59/virtualcity-python-api"
+        "Documentation": "http://virtual-home.org/docs/",
+        "Bug Tracker": "https://github.com/xavierpuigf/virtualhome/issues"
     },
     classifiers=[
         "Programming Language :: Python :: 3",
@@ -22,7 +22,7 @@ setuptools.setup(
         "Operating System :: OS Independent",
     ],
     install_requires=[
-        'certifi==2019.3.9',
+        'certifi==2022.12.7',
         'chardet==3.0.4',
         'idna==2.8',
         'matplotlib>=3.4.2',
@@ -39,6 +39,6 @@ setuptools.setup(
     ],
     package_dir={"": "src"},
     packages=setuptools.find_packages(where="src"),
-    python_requires=">=3.8",
+    python_requires=">=3.10",
 )
 
