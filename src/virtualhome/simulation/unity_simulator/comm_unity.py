@@ -32,7 +32,7 @@ class UnityCommunication(object):
     :param bool docker_enabled: whether the simulator is running in a docker container
     """
 
-    def __init__(self, url='127.0.0.1', port='8080', file_name=None, x_display=None, no_graphics=False, logging=True,
+    def __init__(self, url='127.0.0.1', port='8085', file_name=None, x_display=None, no_graphics=False, logging=True,
                  timeout_wait=30, docker_enabled=False):
         self._address = 'http://' + url + ':' + port
         self.port = port
@@ -104,10 +104,9 @@ class UnityCommunication(object):
     
     def get_visible_objects(self, camera_index):
         """
-        Obtain visible objects according to a given camera
+        Obtain visible objects accoding to a given camera
 
         :param int camera_index: the camera for which you want to check the objects. Between 0 and `camera_count-1`
-
         :return: pair success (bool), msg: the object indices visible according to the camera
 
         """
@@ -125,12 +124,11 @@ class UnityCommunication(object):
         Add a character in the scene. 
 
         :param str character_resource: which game object to use for the character
-        # :param int char_index: the index of the character you want to move
+        :param int char_index: the index of the character you want to move
         :param list position: the position where you want to place the character
         :param str initial_room: the room where you want to put the character, 
-        if position is not specified. If this is not specified, it places character in random location
-
-        :return: success (bool)
+        if positon is not specified. If this is not specified, it places character in random location
+        :return: succes (bool)
         """
         mode = 'random'
         pos = [0, 0, 0]
@@ -155,9 +153,9 @@ class UnityCommunication(object):
         """
         Move the character `char_index` to a new position
 
+
         :param int char_index: the index of the character you want to move
         :param list pos: the position where you want to place the character
-
         :return: succes (bool)
         """
         response = self.post_command(
@@ -170,68 +168,43 @@ class UnityCommunication(object):
             })
         return response['success']
 
+
     def check(self, script_lines):
         response = self.post_command({'id': str(time.time()), 'action': 'check_script', 'stringParams': script_lines})
         return response['success'], response['message']
 
-    def add_camera(self, position=[0,1,0], rotation=[0,0,0], field_view=40):
+    def add_camera(self, position=[0,1,0], rotation=[0,0,0]):
         """
         Add a new scene camera. The camera will be static in the scene.
 
+
         :param list position: the position of the camera, with respect to the agent
         :param list rotation: the rotation of the camera, with respect to the agent
-        :param list field_view: the field of view of the camera
-
         :return: succes (bool)
         """
         cam_dict = {
                 'position': {'x': position[0], 'y': position[1], 'z': position[2]},
-                'rotation': {'x': rotation[0], 'y': rotation[1], 'z': rotation[2]},
-                'field_view': field_view
+                'rotation': {'x': rotation[0], 'y': rotation[1], 'z': rotation[2]}
         }
         response = self.post_command(
                 {'id': str(time.time()), 'action': 'add_camera',
                     'stringParams': [json.dumps(cam_dict)]})
         return response['success'], response['message']
 
-    def update_camera(self, camera_index, position=[0,1,0], rotation=[0,0,0], field_view=40):
-        """
-        Updates an existing camera, identified by index.
-        :param int camera_index: the index of the camera you want to update
-        :param list position: the position of the camera, with respect to the agent
-        :param list rotation: the rotation of the camera, with respect to the agent
-        :param list field_view: the field of view of the camera
-
-        :return: succes (bool)
-        """
-        cam_dict = {
-
-                'position': {'x': position[0], 'y': position[1], 'z': position[2]},
-                'rotation': {'x': rotation[0], 'y': rotation[1], 'z': rotation[2]},
-                'field_view': field_view
-        }
-        response = self.post_command(
-                {'id': str(time.time()), 'action': 'update_camera',
-                    'intParams': [camera_index],
-                    'stringParams': [json.dumps(cam_dict)]})
-        return response['success'], response['message']
-
-
-    def add_character_camera(self, position=[0,1,0], rotation=[0,0,0], field_view=60, name="new_camera"):
+    def add_character_camera(self, position=[0,1,0], rotation=[0,0,0], name="new_camera"):
         """
         Add a new character camera. The camera will be added to every character you include in the scene, and it will move with 
         the character. This must be called before adding any character.
 
+
         :param list position: the position of the camera, with respect to the agent
         :param list rotation: the rotation of the camera, with respect to the agent
         :name: the name of the camera, used for recording when calling render script
-
         :return: succes (bool)
         """
         cam_dict = {
                 'position': {'x': position[0], 'y': position[1], 'z': position[2]},
                 'rotation': {'x': rotation[0], 'y': rotation[1], 'z': rotation[2]},
-                'field_view': field_view,
                 'camera_name': name
         }
         response = self.post_command(
@@ -239,62 +212,22 @@ class UnityCommunication(object):
                     'stringParams': [json.dumps(cam_dict)]})
         return response['success'], response['message']
 
-    def update_character_camera(self, position=[0,1,0], rotation=[0,0,0], field_view=60, name="PERSON_FRONT"):
+    def reset(self, scene_index=None):
         """
-        Update character camera specified by name. This must be called before adding any character.
+        Reset scene. Deletes characters and scene chnages, and loads the scene in scene_index
 
-        :param list position: the position of the camera, with respect to the agent
-        :param list rotation: the rotation of the camera, with respect to the agent
-        :name: the name of the camera, used for recording when calling render script
 
+        :param int scene_index: integer between 0 and 6, corresponding to the apartment we want to load
         :return: succes (bool)
         """
-        cam_dict = {
-                'position': {'x': position[0], 'y': position[1], 'z': position[2]},
-                'rotation': {'x': rotation[0], 'y': rotation[1], 'z': rotation[2]},
-                'field_view': field_view,
-                'camera_name': name
-        }
-        response = self.post_command(
-                {'id': str(time.time()), 'action': 'update_character_camera',
-                    'stringParams': [json.dumps(cam_dict)]})
-        return response['success'], response['message']
-
-    def reset(self, environment=None):
-        """
-        Reset scene. Deletes characters and scene changes, and loads the scene in scene_index
-
-        :param int environment: integer between 0 and 49, corresponding to the apartment we want to load
-        :return: succes (bool)
-        """
-        response = self.post_command({'id': str(time.time()), 'action': 'clear',
-                                  'intParams': [] if environment is None else [environment]})
-        response = self.post_command({'id': str(time.time()), 'action': 'environment',
-                                    'intParams': [] if environment is None else [environment]})
+        response = self.post_command({'id': str(time.time()), 'action': 'reset',
+                                      'intParams': [] if scene_index is None else [scene_index]})
         return response['success']
 
-    def fast_reset(self, environment=None):
-        """
-        Fast scene. Deletes characters and scene changes
-
-        :return: success (bool)
-        """
+    def fast_reset(self):
         response = self.post_command({'id': str(time.time()), 'action': 'fast_reset',
-                                  'intParams': [] if environment is None else [environment]})
-        return response['success']
-
-    def procedural_generation(self, seed=None):
-        """
-        Generates new environments through procedural generation logic.
-
-        :param int seed: integer corresponding to the seed given during generation
-        :return: success (bool), seed: (integer)
-        """
-        response = self.post_command({'id': str(time.time()), 'action': 'clear_procedural',
                                       'intParams': []})
-        response = self.post_command({'id': str(time.time()), 'action': 'procedural_generation',
-                                  'intParams': [] if seed is None else [seed]})
-        return response['success'], response['message']
+        return response['success']
 
     def camera_count(self):
         """
@@ -309,7 +242,7 @@ class UnityCommunication(object):
         """
         Returns the number of cameras in the scene
 
-        :return: pair success (bool), camera_names: (list): the names of the cameras defined fo the characters
+        :return: pair success (bool), camera_names: (list): the names of the cameras defined fo rthe characters
         """
         response = self.post_command({'id': str(time.time()), 'action': 'character_cameras'})
         return response['success'], response['message']
@@ -320,6 +253,8 @@ class UnityCommunication(object):
 
         :param list camera_indexes: the list of cameras to return, can go from 0 to `camera_count-1`
         :return: pair success (bool), cam_data: (list): for every camera, the matrices with the camera parameters
+
+
         """
         if not isinstance(camera_indexes, collections.Iterable):
             camera_indexes = [camera_indexes]
@@ -333,9 +268,8 @@ class UnityCommunication(object):
 
         :param list camera_indexes: the list of cameras to return, can go from 0 to `camera_count-1`
         :param str mode: what kind of camera rendering to return. Possible modes are: "normal", "seg_inst", "seg_class", "depth", "flow", "albedo", "illumination", "surf_normals"
-        :param int image_width: width of the returned images
-        :param int image_height: height of the returned iamges
-
+        :param str image_width: width of the returned images
+        :param str image_heigth: height of the returned iamges
         :return: pair success (bool), images: (list) a list of images according to the camera rendering mode
         """
         if not isinstance(camera_indexes, collections.Iterable):
@@ -376,19 +310,12 @@ class UnityCommunication(object):
         :param bool ignore_placing_obstacles: when adding new objects, if the transform is not specified, whether to consider if it collides with existing objects
         :param dict prefabs_map: dictionary to specify which Unity game objects should be used when creating new objects
         :param bool transfer_transform: boolean indicating if we should set the exact position of new added objects or not
-
         :return: pair success (bool), message: (str)
         """
-        config = {
-            'randomize': randomize, 
-            'random_seed': random_seed, 
-            'animate_character': animate_character,
-            'ignore_obstacles': ignore_placing_obstacles, 
-            'transfer_transform': transfer_transform
-        }
+        config = {'randomize': randomize, 'random_seed': random_seed, 'animate_character': animate_character,
+                  'ignore_obstacles': ignore_placing_obstacles, 'transfer_transform': transfer_transform}
         string_params = [json.dumps(config), json.dumps(new_graph)]
         int_params = [int(randomize), random_seed]
-
         if prefabs_map is not None:
             string_params.append(json.dumps(prefabs_map))
         response = self.post_command({'id': str(time.time()), 'action': 'expand_scene',
@@ -398,53 +325,6 @@ class UnityCommunication(object):
         except ValueError:
             message = response['message']
         return response['success'], message
-
-    def set_time(self, hours=0, minutes=0, seconds=0):
-        """
-        Set the time in the environment
-
-        :param int hours: hours in 24-hour time
-        :param int minutes: minutes in 24-hour time
-        :param int seconds: seconds in 24-hour time
-        :param int scaler: scaler is a multipler that increase/decreases time step
-
-        :return: success (bool)
-        """
-        time_dict = {
-                'hours': hours,
-                'minutes': minutes,
-                'seconds': seconds
-        }
-        response = self.post_command(
-                {'id': str(time.time()), 'action': 'set_time',
-                    'stringParams': [json.dumps(time_dict)]})
-        return response['success']
-
-    def activate_physics(self, gravity=-10):
-        """
-        Activates gravity and realistic collisions in the environment
-
-        :param list gravity: int of gravity value experienced in the environment
-
-        :return: success (bool)
-        """
-        physics_dict = {
-                'gravity': gravity
-        }
-        response = self.post_command(
-                {'id': str(time.time()), 'action': 'activate_physics',
-                    'stringParams': [json.dumps(physics_dict)]})
-        return response['success']
-
-    def remove_terrain(self):
-        """
-        remove_terrain. Deletes terrain
-
-        :return: success (bool)
-        """
-        response = self.post_command({'id': str(time.time()), 'action': 'remove_terrain',
-                                      'intParams': []})
-        return response['success']
 
     def point_cloud(self):
         response = self.post_command({'id': str(time.time()), 'action': 'point_cloud'})
@@ -458,6 +338,54 @@ class UnityCommunication(object):
         """
         Executes a script in the simulator. The script can be single or multi agent, 
         and can be used to generate a video, or just to change the state of the environment
+
+        :param list script: a list of script lines, of the form `['<char{id}> [{Action}] <{object_name}> ({object_id})']`
+        :param bool randomize_execution: randomly choose elements
+        :param int random_seed: random seed to use when randomizing execution, -1 means that the seed is not set
+        :param bool find_solution: find solution (True) or use graph ids to determine object instances (False)
+        :param int processing_time_limit: time limit for finding a solution in seconds
+        :param int skip_execution: skip rendering, only check if a solution exists
+        :param str output_folder: folder to output renderings
+        :param str file_name_prefix: prefix of created files
+        :param int frame_rate: frame rate at which to generate the video
+        :param str image_synthesis: what information to save. Can be multiple at the same time. Modes are: "normal", "seg_inst", "seg_class", "depth", "flow", "albedo", "illumination", "surf_normals". Leave empty if you don't want to generate anythign
+        :param bool save_pose_data: save pose data, a skeleton for every agent and frame
+        :param int image_width: image_height for the generated frames
+        :param int image_height: image_height for the generated frames
+        :param bool recoring: whether to record data with cameras
+        :param bool save_scene_states: save scene states (this will be unused soon)
+        :param list camera_mode: list with cameras used to render data. Can be a str(i) with i being a scene camera index or one of the cameras from `character_cameras`
+        :param int time_scale: accelerate time at which actions happen
+        :param bool skip_animation: whether agent should teleport/do actions without animation (True), or perform the animations (False) 
+
+        :return: pair success (bool), message: (str)
+        """
+        params = {'randomize_execution': randomize_execution, 'random_seed': random_seed,
+                  'processing_time_limit': processing_time_limit, 'skip_execution': skip_execution,
+                  'output_folder': output_folder, 'file_name_prefix': file_name_prefix,
+                  'frame_rate': frame_rate, 'image_synthesis': image_synthesis, 
+                  'find_solution': find_solution,
+                  'save_pose_data': save_pose_data, 'save_scene_states': save_scene_states,
+                  'camera_mode': camera_mode, 'recording': recording,
+                  'image_width': image_width, 'image_height': image_height,
+                  'time_scale': time_scale, 'skip_animation': skip_animation}
+        response = self.post_command({'id': str(time.time()), 'action': 'render_script',
+                                      'stringParams': [json.dumps(params)] + script})
+
+        try:
+            message = json.loads(response['message'])
+        except ValueError:
+            message = response['message']
+        
+        return response['success'], message
+    
+    def start_recording(self, script, objects=[], randomize_execution=False, random_seed=-1, processing_time_limit=10,
+                      skip_execution=False, find_solution=False, output_folder='Output/', file_name_prefix="script",
+                      frame_rate=5, image_synthesis=['normal'], save_pose_data=False,
+                      image_width=640, image_height=480, recording=False,
+                      save_scene_states=False, camera_mode=['AUTO'], time_scale=1.0, skip_animation=False):
+        """
+        Starts recording
 
         :param list script: a list of script lines, of the form `['<char{id}> [{Action}] <{object_name}> ({object_id})']`
         :param bool randomize_execution: randomly choose elements
@@ -484,12 +412,12 @@ class UnityCommunication(object):
                   'processing_time_limit': processing_time_limit, 'skip_execution': skip_execution,
                   'output_folder': output_folder, 'file_name_prefix': file_name_prefix,
                   'frame_rate': frame_rate, 'image_synthesis': image_synthesis, 
-                  'find_solution': find_solution,
+                  'find_solution': find_solution, 'objects': objects,
                   'save_pose_data': save_pose_data, 'save_scene_states': save_scene_states,
                   'camera_mode': camera_mode, 'recording': recording,
                   'image_width': image_width, 'image_height': image_height,
                   'time_scale': time_scale, 'skip_animation': skip_animation}
-        response = self.post_command({'id': str(time.time()), 'action': 'render_script',
+        response = self.post_command({'id': str(time.time()), 'action': 'start_recording',
                                       'stringParams': [json.dumps(params)] + script})
 
         try:
@@ -498,6 +426,59 @@ class UnityCommunication(object):
             message = response['message']
         
         return response['success'], message
+    
+    def stop_recording(self):
+        """
+        Stop Recording
+
+        :return: pair success (bool), mapping: (dictionary)
+        """
+        response = self.post_command({'id': str(time.time()), 'action': 'stop_recording'})
+        return response['success'], json.loads(response['message'])
+    
+    
+    def add_sensor(self, position=[0,1,0], rotation=[0,0,0], radius = 4, fov=40):
+        """
+        Add a new scene sensor. The sensor will be static in the scene.
+
+        :param list position: the position of the camera, with respect to the agent
+        :param list rotation: the rotation of the camera, with respect to the agent
+        :param list field_view: the field of view of the camera
+
+        :return: succes (bool)
+        """
+        sensor_dict = {
+                'position': {'x': position[0], 'y': position[1], 'z': position[2]},
+                'rotation': {'x': rotation[0], 'y': rotation[1], 'z': rotation[2]},
+                'radius': radius,
+                'fov': fov,
+        }
+        response = self.post_command(
+                {'id': str(time.time()), 'action': 'add_sensor',
+                    'stringParams': [json.dumps(sensor_dict)]})
+        return response['success'], response['message']
+
+    def update_sensor(self, sensor_index, position=[0,1,0], rotation=[0,0,0], field_view=40):
+        """
+        Updates an existing sensor, identified by index.
+        :param int sensor: the index of the sensor you want to update
+        :param list position: the position of the sensor, with respect to the agent
+        :param list rotation: the rotation of the sensor, with respect to the agent
+        :param list field_view: the field of view of the sensor
+
+        :return: succes (bool)
+        """
+        sensor_dict = {
+
+                'position': {'x': position[0], 'y': position[1], 'z': position[2]},
+                'rotation': {'x': rotation[0], 'y': rotation[1], 'z': rotation[2]},
+                'field_view': field_view
+        }
+        response = self.post_command(
+                {'id': str(time.time()), 'action': 'update_sensor',
+                    'intParams': [sensor_index],
+                    'stringParams': [json.dumps(cam_dict)]})
+        return response['success'], response['message']
 
         
 def _decode_image(img_string):
@@ -531,3 +512,4 @@ class UnityEngineException(Exception):
 class UnityCommunicationException(Exception):
     def __init__(self, message):
         self.message = message
+

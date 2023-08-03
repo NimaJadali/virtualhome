@@ -6,7 +6,7 @@ import socket
 import glob
 
 class UnityLauncher(object):
-    def __init__(self, port='8080', file_name=None, batch_mode=True, x_display=None, no_graphics=False, logging=False, docker_enabled=False):
+    def __init__(self, port='8085', file_name=None, batch_mode=True, x_display=None, no_graphics=False, logging=False, docker_enabled=False):
         self.proc = None
         atexit.register(self.close)
         self.port_number = int(port)
